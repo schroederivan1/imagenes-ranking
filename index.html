@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ranking de Ventas · Cerámicas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #2c2f36;
+    --surface: #383c45;
+    --surface2: #42474f;
+    --border: #52576080;
+    --text: #f0f0f0;
+    --muted: #6b7280;
+    --canuelas: #2563eb;
+    --canuelas-light: #3b82f6;
+    --canuelas-glow: rgba(37,99,235,0.18);
+    --tendenza: #e11d48;
+    --tendenza-light: #f43f5e;
+    --tendenza-glow: rgba(225,29,72,0.18);
+    --gold: #f59e0b;
+    --silver: #94a3b8;
+    --bronze: #cd7c3c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, #0a0c10 0%, #111318 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px; position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 20px; height: 64px;
+  }
+  .logo-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--canuelas), var(--tendenza));
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #fff; }
+  .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: -4px; }
+
+  .search-wrap { flex: 1; max-width: 480px; position: relative; }
+  .search-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 16px 9px 40px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input:focus { border-color: #4b5563; box-shadow: 0 0 0 3px rgba(255,255,255,0.05); }
+  .search-input::placeholder { color: var(--muted); }
+  .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 15px; pointer-events: none; }
+
+  .brand-filter { display: flex; gap: 8px; flex-shrink: 0; }
+  .brand-btn {
+    padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: 0.5px;
+    transition: all 0.2s; text-transform: uppercase;
+  }
+  .brand-btn.all.active    { background: var(--surface2); border-color: #4b5563; color: var(--text); }
+  .brand-btn.canuelas.active { background: var(--canuelas-glow); border-color: var(--canuelas); color: var(--canuelas-light); }
+  .brand-btn.tendenza.active { background: var(--tendenza-glow); border-color: var(--tendenza); color: var(--tendenza-light); }
+
+  .content { padding: 28px 24px; max-width: 1280px; margin: 0 auto; }
+
+  .section-header {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 20px; margin-top: 36px;
+  }
+  .section-header:first-child { margin-top: 0; }
+  .section-brand-bar { height: 3px; border-radius: 2px; width: 32px; flex-shrink: 0; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 3px; }
+  .section-count { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .medida-section { margin-bottom: 36px; }
+  .medida-section.hidden { display: none; }
+
+  .medida-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .medida-tag {
+    font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
+  }
+  .medida-tag.canuelas { background: var(--canuelas-glow); color: var(--canuelas-light); border: 1px solid rgba(37,99,235,0.3); }
+  .medida-tag.tendenza { background: var(--tendenza-glow); color: var(--tendenza-light); border: 1px solid rgba(225,29,72,0.3); }
+  .medida-label { font-size: 15px; font-weight: 600; color: var(--text); flex-shrink: 0; }
+  .medida-sep { flex: 1; height: 1px; background: var(--border); }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+  }
+
+  .product-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; position: relative;
+  }
+  .product-card:hover { transform: translateY(-3px); }
+  .product-card.canuelas:hover { border-color: rgba(37,99,235,0.4); box-shadow: 0 8px 30px var(--canuelas-glow); }
+  .product-card.tendenza:hover { border-color: rgba(225,29,72,0.4); box-shadow: 0 8px 30px var(--tendenza-glow); }
+
+  .card-img-wrap {
+    width: 100%; aspect-ratio: 1/1; background: var(--surface2); position: relative; overflow: hidden;
+  }
+  .card-img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 0.3s;
+  }
+  .product-card:hover .card-img { transform: scale(1.04); }
+  .img-placeholder {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px; color: var(--muted);
+  }
+  .tile-icon { font-size: 36px; opacity: 0.2; }
+  .img-loading-text { font-size: 10px; opacity: 0.4; }
+
+  .rank-badge {
+    position: absolute; top: 8px; left: 8px; width: 28px; height: 28px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; z-index: 2;
+  }
+  .rank-1 { background: var(--gold); color: #000; box-shadow: 0 2px 8px rgba(245,158,11,0.5); }
+  .rank-2 { background: var(--silver); color: #000; }
+  .rank-3 { background: var(--bronze); color: #000; }
+  .rank-other { background: rgba(0,0,0,0.65); color: var(--muted); border: 1px solid var(--border); backdrop-filter: blur(4px); }
+
+  .card-body { padding: 12px 12px 14px; }
+  .card-name { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+
+  /* BARRA DE PORCENTAJE */
+  .pct-wrap { }
+  .pct-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .pct-label { font-size: 10px; color: var(--muted); }
+  .pct-value { font-size: 12px; font-weight: 700; }
+  .pct-bar-track {
+    height: 5px; background: var(--surface2); border-radius: 99px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .pct-bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+
+  /* empty state */
+  .no-results { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 15px; }
+  .section-block.hidden { display: none; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+  .product-card { animation: fadeUp 0.3s ease both; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-group">
+    <div class="logo-icon">⬛</div>
+    <div>
+      <div class="logo-text">Ranking Ventas</div>
+      <div class="logo-sub">Productos más vendidos</div>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search" type="text" placeholder="Buscar modelo… ej: BARILOCHE, SNOW, VARESE"/>
+  </div>
+  <div class="brand-filter">
+    <button class="brand-btn all active" onclick="filterBrand('all',this)">Todas</button>
+    <button class="brand-btn canuelas" onclick="filterBrand('canuelas',this)">Cañuelas</button>
+    <button class="brand-btn tendenza" onclick="filterBrand('tendenza',this)">Tendenza</button>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+<div id="no-results" style="display:none" class="no-results">
+  No se encontraron productos para "<span id="no-results-q"></span>"
+</div>
+
+<script>
+// ── DATOS ──────────────────────────────────────────────────────────────────
+const SECTIONS = [
+  { brand:"canuelas", label:"Cerámica Cañuelas", sub:"8 líneas · 46 productos", color:"var(--canuelas)", colorLight:"var(--canuelas-light)",
+    medidas: [
+      { id:"c-43x43",   tag:"Cerámica",         size:"43 × 43 cm",
+        products:[
+          {rank:1,name:"BARILOCHE GRIS",m2:71597},
+          {rank:2,name:"CORCEGA GRIS",m2:27350},
+          {rank:3,name:"NIZA GRIS",m2:21859},
+          {rank:4,name:"POZZUOLI",m2:18586},
+          {rank:5,name:"NIZA BEIGE",m2:16579},
+          {rank:6,name:"PADUA GRIS",m2:16000},
+        ]},
+      { id:"c-50x50",   tag:"Cerámica",         size:"50 × 50 cm",
+        products:[
+          {rank:1,name:"RIMINNI GRIS",m2:37426},
+          {rank:2,name:"POTENZA",m2:34445},
+          {rank:3,name:"RIMINNI TIZA",m2:34445},
+          {rank:4,name:"NAPOLES GRIS",m2:23267},
+          {rank:5,name:"NAPOLES BEIGE",m2:7866},
+          {rank:6,name:"CALACATTA",m2:7866},
+        ]},
+      { id:"c-32x47",   tag:"Cerámica",         size:"32 × 47 cm",
+        products:[
+          {rank:1,name:"BIANCO MATE",m2:9798},
+          {rank:2,name:"GLACIAR",m2:7507},
+          {rank:3,name:"MALAGA GRIS",m2:6624},
+          {rank:4,name:"CARTAGENA GRAFITO",m2:6624},
+          {rank:5,name:"IBIZA BLANCO",m2:6017},
+          {rank:6,name:"CALACATTA BRILLANTE",m2:6017},
+        ]},
+      { id:"c-20x62",   tag:"Cerámica",         size:"20 × 62 cm",
+        products:[
+          {rank:1,name:"MONZA",m2:16268},
+          {rank:2,name:"ALESSANDRIA",m2:12642},
+          {rank:3,name:"MACERATA",m2:7938},
+          {rank:4,name:"UDINE",m2:2842},
+          {rank:5,name:"VICENZA",m2:1344},
+        ]},
+      { id:"c-60x60p",  tag:"Cerámica Pulida",  size:"60 × 60 cm",
+        products:[
+          {rank:1,name:"BREST 1° 60x60",m2:10357},
+          {rank:2,name:"NANTES 1° 60x60",m2:6847},
+          {rank:3,name:"CANNES 1° 60x60",m2:6145},
+          {rank:4,name:"MONTPELLIER 1° 60x60",m2:3780},
+          {rank:5,name:"LYON 1° 60x60",m2:3629},
+        ]},
+      { id:"c-61x61",   tag:"Cerámica",         size:"61 × 61 cm",
+        products:[
+          {rank:1,name:"VARESE GRIS",m2:32957},
+          {rank:2,name:"CARRARA",m2:26095},
+          {rank:3,name:"VARESE TIZA",m2:14284},
+          {rank:4,name:"NERO",m2:11776},
+          {rank:5,name:"ONIX",m2:5027},
+        ]},
+      { id:"c-61x123n", tag:"Cerámica Natural",  size:"61 × 123 cm",
+        products:[
+          {rank:1,name:"ESPARTA IN 61.3x123",m2:11214},
+          {rank:2,name:"ESPARTA OUT 61.3x123",m2:11214},
+          {rank:3,name:"ARGOS IN 61.3x123",m2:3276},
+          {rank:4,name:"PARGAS IN 61.3x123",m2:2637},
+          {rank:5,name:"PARGAS OUT 61.3x123",m2:1134},
+        ]},
+      { id:"c-61x123p", tag:"Cerámica Pulida",   size:"61 × 123 cm",
+        products:[
+          {rank:1,name:"MONTPELLIER PULIDO 61.3x123",m2:5355},
+          {rank:2,name:"LYON PULIDO 61.3x123",m2:4788},
+          {rank:3,name:"LILLE PULIDO 61.3x123",m2:4473},
+          {rank:4,name:"CANNES PULIDO 61.3x123",m2:3780},
+          {rank:5,name:"NANTES PULIDO 61.3x123",m2:2142},
+        ]},
+    ]
+  },
+  { brand:"tendenza", label:"Tendenza", sub:"8 líneas · 38 productos", color:"var(--tendenza)", colorLight:"var(--tendenza-light)",
+    medidas: [
+      { id:"t-30x62",   tag:"Tendenza",          size:"30 × 62 cm",
+        products:[
+          {rank:1,name:"SNOW",m2:6235},
+          {rank:2,name:"FROZEN",m2:3474},
+          {rank:3,name:"ALABASTER",m2:2749},
+        ]},
+      { id:"t-59x119p", tag:"Tendenza Pulido",   size:"59 × 119 cm",
+        products:[
+          {rank:1,name:"SKY",m2:3907},
+          {rank:2,name:"IMPERIAL",m2:2835},
+          {rank:3,name:"UNIQUE",m2:2526},
+          {rank:4,name:"MICHELANGELO",m2:1857},
+          {rank:5,name:"SPECTRUM",m2:1602},
+        ]},
+      { id:"t-19x118",  tag:"Tendenza",          size:"19 × 118 cm",
+        products:[
+          {rank:1,name:"STORMY",m2:19031},
+          {rank:2,name:"CINNAMON",m2:15896},
+          {rank:3,name:"BRUSHED WHITE",m2:5420},
+          {rank:4,name:"FOREST",m2:4226},
+          {rank:5,name:"FOSSIL",m2:2379},
+        ]},
+      { id:"t-57x57n",  tag:"Tendenza Natural",  size:"57.5 × 57.5 cm",
+        products:[
+          {rank:1,name:"SMOKE",m2:19031},
+          {rank:2,name:"FOG",m2:15896},
+          {rank:3,name:"CAST",m2:5420},
+          {rank:4,name:"MOONSTONE",m2:4226},
+          {rank:5,name:"OBSIDIAN",m2:2379},
+        ]},
+      { id:"t-57x57p",  tag:"Tendenza Pulido",   size:"57.5 × 57.5 cm",
+        products:[
+          {rank:1,name:"ICE",m2:7723},
+          {rank:2,name:"POLAR",m2:5330},
+          {rank:3,name:"LAGOON",m2:5310},
+          {rank:4,name:"PALLADIUM",m2:2394},
+          {rank:5,name:"GOLDEN",m2:1346},
+        ]},
+      { id:"t-59x119n", tag:"Tendenza Natural",  size:"59 × 119 cm",
+        products:[
+          {rank:1,name:"STEEL",m2:7723},
+          {rank:2,name:"NOIR",m2:5330},
+          {rank:3,name:"BONE",m2:5310},
+          {rank:4,name:"LEAD",m2:1058},
+          {rank:5,name:"ELEGANCE",m2:816},
+        ]},
+      { id:"t-91x91n",  tag:"Tendenza Natural",  size:"91.5 × 91.5 cm",
+        products:[
+          {rank:1,name:"RUSTIC",m2:6235},
+          {rank:2,name:"PLATINUM IN",m2:3474},
+          {rank:3,name:"POLARIN IN",m2:2749},
+          {rank:4,name:"ABSOLUT IN",m2:2338},
+          {rank:5,name:"PLATINUM OUT",m2:534},
+        ]},
+      { id:"t-91x91p",  tag:"Tendenza Pulido",   size:"91.5 × 91.5 cm",
+        products:[
+          {rank:1,name:"URBAN",m2:4810},
+          {rank:2,name:"MIDNIGHT",m2:3006},
+          {rank:3,name:"CONCEPT",m2:2071},
+          {rank:4,name:"POSEIDON",m2:935},
+          {rank:5,name:"MONTBLANC",m2:868},
+        ]},
+    ]
+  }
+];
+
+// ── COLORES DE BARRA POR POSICIÓN ──────────────────────────────
+const BAR_COLORS = {
+  canuelas: ["#f59e0b","#94a3b8","#cd7c3c","#3b82f6","#3b82f6","#3b82f6"],
+  tendenza: ["#f59e0b","#94a3b8","#cd7c3c","#f43f5e","#f43f5e","#f43f5e"],
+};
+
+// ── IMAGEN por nombre ──────────────────────────────────────────
+function slug(name) {
+  return name.toLowerCase()
+    .replace(/[°º]/g,"")
+    .replace(/[áàä]/g,"a").replace(/[éèë]/g,"e")
+    .replace(/[íìï]/g,"i").replace(/[óòö]/g,"o")
+    .replace(/[úùü]/g,"u").replace(/[ñ]/g,"n")
+    .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+
+function imgSrc(name) {
+  return `https://raw.githubusercontent.com/schroederivan1/imagenes-ranking/main/imgs/${slug(name)}.jpg`;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────
+function rankBadgeClass(r) {
+  if(r===1) return "rank-1";
+  if(r===2) return "rank-2";
+  if(r===3) return "rank-3";
+  return "rank-other";
+}
+
+function renderSection(sec) {
+  const medidasHTML = sec.medidas.map(med => {
+    const total = med.products.reduce((s,p) => s + (p.m2||0), 0);
+    const maxM2  = Math.max(...med.products.map(p => p.m2||0));
+
+    const cards = med.products.map((p, i) => {
+      const pct   = total > 0 ? Math.round((p.m2||0) / total * 100) : 0;
+      const barW  = maxM2 > 0 ? Math.round((p.m2||0) / maxM2 * 100) : 0;
+      const barColor = BAR_COLORS[sec.brand][i] || "#3b82f6";
+      const delay = i * 50;
+      return `
+        <div class="product-card ${sec.brand}" data-name="${p.name.toLowerCase()}" data-brand="${sec.brand}" style="animation-delay:${delay}ms">
+          <div class="card-img-wrap">
+            <div class="rank-badge ${rankBadgeClass(p.rank)}">${p.rank}°</div>
+            <div class="img-placeholder">
+              <span class="tile-icon">⬛</span>
+              <span class="img-loading-text">sin imagen</span>
+            </div>
+            <img
+              src="${imgSrc(p.name)}"
+              alt="${p.name}"
+              style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;transition:transform 0.3s"
+              onerror="this.style.display='none'"
+              onload="this.previousElementSibling.style.display='none'"
+            />
+          </div>
+          <div class="card-body">
+            <div class="card-name">${p.name}</div>
+            <div class="pct-wrap">
+              <div class="pct-row">
+                <span class="pct-label">Participación en categoría</span>
+                <span class="pct-value" style="color:${barColor}">${pct}%</span>
+              </div>
+              <div class="pct-bar-track">
+                <div class="pct-bar-fill" style="width:${barW}%;background:${barColor}"></div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join("");
+
+    return `
+      <div class="medida-section" data-brand="${sec.brand}" data-medida="${med.id}">
+        <div class="medida-title-row">
+          <span class="medida-tag ${sec.brand}">${med.tag}</span>
+          <span class="medida-label">${med.size}</span>
+          <div class="medida-sep"></div>
+        </div>
+        <div class="product-grid">${cards}</div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="section-block" data-brand="${sec.brand}" id="block-${sec.brand}">
+      <div class="section-header">
+        <div class="section-brand-bar" style="background:${sec.color}"></div>
+        <div class="section-title" style="color:${sec.colorLight}">${sec.label}</div>
+        <div class="section-count">${sec.sub}</div>
+      </div>
+      ${medidasHTML}
+    </div>`;
+}
+
+document.getElementById("content").innerHTML = SECTIONS.map(renderSection).join("");
+
+// ── FILTROS ────────────────────────────────────────────────────
+let activeBrand = "all";
+
+function filterBrand(brand, btn) {
+  activeBrand = brand;
+  document.querySelectorAll(".brand-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  applyFilters();
+}
+
+document.getElementById("search").addEventListener("input", applyFilters);
+
+function applyFilters() {
+  const query = document.getElementById("search").value.trim().toLowerCase();
+
+  document.querySelectorAll(".section-block").forEach(block => {
+    const b = block.dataset.brand;
+    block.classList.toggle("hidden", activeBrand !== "all" && b !== activeBrand);
+  });
+
+  let total = 0;
+  document.querySelectorAll(".medida-section").forEach(sec => {
+    const b = sec.dataset.brand;
+    if(activeBrand !== "all" && b !== activeBrand) { sec.classList.add("hidden"); return; }
+    const cards = sec.querySelectorAll(".product-card");
+    let vis = 0;
+    cards.forEach(c => {
+      const match = !query || c.dataset.name.includes(query);
+      c.style.display = match ? "" : "none";
+      if(match) vis++;
+    });
+    sec.classList.toggle("hidden", vis === 0);
+    total += vis;
+  });
+
+  const noRes = document.getElementById("no-results");
+  if(query && total === 0) {
+    noRes.style.display = "block";
+    document.getElementById("no-results-q").textContent = query;
+  } else {
+    noRes.style.display = "none";
+  }
+}
+</script>
+</body>
+</html>
